@@ -118,7 +118,25 @@ const fakeFetch = async (url) => {
   assert.equal(r.status, 200);
   assert.deepEqual(r.data.weekly.map(x => [x.username, x.picks, x.locked, x.pending]), [['Jacob', 2, true, 2], ['sam', 1, false, 1]]);
   assert.equal(r.data.season.length, 2); assert.equal(r.data.games, 5);
+  // Viewing another player's picks: only when both of you have locked in the week
+  r = await call('GET', '/api/player?name=jacob&week=8');
+  assert.equal(r.status, 200); assert.equal(r.data.username, 'Jacob');
+  assert.deepEqual([r.data.locked, r.data.viewerLocked, r.data.revealed], [true, false, false], 'logged-out viewer sees nothing');
+  assert.ok(r.data.games.every(g => g.pick === null)); assert.equal(r.data.games.filter(g => g.hidden).length, 2);
+  assert.equal((await call('GET', '/api/player?name=nobody&week=8')).status, 404);
+  await call('POST', '/api/login', { username: 'sam', password: 'password123' });
+  r = await call('GET', '/api/player?name=jacob&week=8');
+  assert.equal(r.data.revealed, false, 'sam has not locked yet, so cannot see');
+  await call('POST', '/api/lock', { week: 8 });
+  r = await call('GET', '/api/player?name=jacob&week=8');
+  assert.equal(r.data.revealed, true, 'both locked, picks visible');
+  assert.equal(r.data.games.find(g => g.key === 'KC-DEN').pick, 'DEN');
+  const samView = await call('GET', '/api/player?name=sam&week=8');
+  assert.equal(samView.data.revealed, true, 'always see your own picks');
+  cookie = '';
   cookie = mine;
+  r = await call('GET', '/api/player?name=Jacob&week=8');
+  assert.equal(r.data.games.find(g => g.key === 'KC-DEN').pick, 'DEN', 'you can always see your own picks');
 
   // Duplicate username
   cookie = '';

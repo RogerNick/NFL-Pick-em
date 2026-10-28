@@ -376,6 +376,32 @@ function createApp({ db, espn, clientDir = path.join(__dirname, 'client') }) {
       return { week, games: schedules[week]?.length || 0, weekly: rank(weekly), season: rank(season) };
     },
 
+    // One player's picks for a week. You only see someone else's picks once you AND they have locked in that week.
+    'GET /api/player': async (req, res, url) => {
+      const week = Number(url.searchParams.get('week'));
+      if (!validWeek(week)) throw fail(400, 'Week must be 1–18.');
+      const p = q.userByName.get(String(url.searchParams.get('name') || '').trim());
+      if (!p) throw fail(404, 'No player with that name.');
+      const viewer = currentUser(req), self = !!viewer && viewer.id === p.id;
+      const all = picksMap(p.id);
+      let games = [];
+      try { games = await espn.getWeek(week); } catch { throw fail(502, 'Could not load the Week ' + week + ' schedule. Try again shortly.'); }
+      const theirs = all[week] || {};
+      const playerLocked = weekLocked(p.id, week), viewerLocked = !!viewer && weekLocked(viewer.id, week);
+      const reveal = self || (playerLocked && viewerLocked);
+      const rows = games.map(g => {
+        const pick = theirs[g.key] || null;
+        return { ...g, pick: reveal ? pick : null, hidden: !!pick && !reveal };
+      });
+      const weeks = {}, season = { correct: 0, wrong: 0, push: 0, pending: 0 };
+      await Promise.all(Object.keys(all).map(async w => {
+        let gs; try { gs = await espn.getWeek(Number(w)); } catch { return; }
+        weeks[w] = grade(gs, all[w]); for (const k in weeks[w]) season[k] += weeks[w][k];
+      }));
+      return { username: p.username, week, locked: playerLocked, viewerLocked, revealed: reveal, games: rows,
+        weekRecord: weeks[week] || { correct: 0, wrong: 0, push: 0, pending: 0 }, season, self };
+    },
+
     'GET /api/record': async (req) => {
       const u = currentUser(req); if (!u) throw fail(401, 'Log in first.');
       const byWeek = picksMap(u.id);
