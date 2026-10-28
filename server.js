@@ -48,7 +48,13 @@ function openDb(file = DB_FILE) {
       game_key TEXT NOT NULL,
       team TEXT NOT NULL,
       updated_at INTEGER NOT NULL,
-      PRIMARY KEY(user_id, season, week, game_key));`);
+      PRIMARY KEY(user_id, season, week, game_key));
+    CREATE TABLE IF NOT EXISTS week_locks(
+      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      season INTEGER NOT NULL,
+      week INTEGER NOT NULL,
+      locked_at INTEGER NOT NULL,
+      PRIMARY KEY(user_id, season, week));`);
   return db;
 }
 
@@ -202,6 +208,13 @@ function createApp({ db, espn, clientDir = path.join(__dirname, 'client') }) {
     insertPickIfNew: db.prepare(`INSERT INTO picks(user_id, season, week, game_key, team, updated_at) VALUES(?, ?, ?, ?, ?, ?)
       ON CONFLICT(user_id, season, week, game_key) DO NOTHING`),
     deletePick: db.prepare('DELETE FROM picks WHERE user_id = ? AND season = ? AND week = ? AND game_key = ?'),
+    locksFor: db.prepare('SELECT week FROM week_locks WHERE user_id = ? AND season = ?'),
+    isWeekLocked: db.prepare('SELECT 1 FROM week_locks WHERE user_id = ? AND season = ? AND week = ?'),
+    lockWeek: db.prepare('INSERT INTO week_locks(user_id, season, week, locked_at) VALUES(?, ?, ?, ?) ON CONFLICT DO NOTHING'),
+    countWeekPicks: db.prepare('SELECT COUNT(*) AS n FROM picks WHERE user_id = ? AND season = ? AND week = ?'),
+    allUsers: db.prepare('SELECT id, username FROM users ORDER BY username'),
+    allPicks: db.prepare('SELECT user_id, week, game_key, team FROM picks WHERE season = ?'),
+    allLocks: db.prepare('SELECT user_id, week FROM week_locks WHERE season = ?'),
   };
 
   function send(res, status, body, headers = {}) {
@@ -237,6 +250,8 @@ function createApp({ db, espn, clientDir = path.join(__dirname, 'client') }) {
     for (const r of q.picksFor.all(userId, SEASON)) (out[r.week] ??= {})[r.game_key] = r.team;
     return out;
   }
+  const lockedWeeks = userId => q.locksFor.all(userId, SEASON).map(r => r.week).sort((a, b) => a - b);
+  const weekLocked = (userId, week) => !!q.isWeekLocked.get(userId, SEASON, week);
   const validWeek = w => Number.isInteger(w) && w >= 1 && w <= 18;
   const clientIp = req => String(req.headers['x-forwarded-for'] || req.socket.remoteAddress || '').split(',')[0].trim();
 
@@ -283,13 +298,14 @@ function createApp({ db, espn, clientDir = path.join(__dirname, 'client') }) {
 
     'GET /api/picks': async (req) => {
       const u = currentUser(req); if (!u) throw fail(401, 'Log in first.');
-      return { picks: picksMap(u.id) };
+      return { picks: picksMap(u.id), lockedWeeks: lockedWeeks(u.id) };
     },
 
     'PUT /api/picks': async (req) => {
       const u = currentUser(req); if (!u) throw fail(401, 'Log in to make picks.');
       const { week, key, team } = await readJson(req);
       if (!validWeek(week)) throw fail(400, 'Bad week.');
+      if (weekLocked(u.id, week)) throw fail(423, 'You locked in your Week ' + week + ' picks, so they can’t be changed.');
       let games;
       try { games = await espn.getWeek(week); } catch { throw fail(503, 'Schedule unavailable right now, so picks can’t be checked. Try again shortly.'); }
       const g = games.find(x => x.key === key);
@@ -309,6 +325,7 @@ function createApp({ db, espn, clientDir = path.join(__dirname, 'client') }) {
       for (const [w, entries] of Object.entries(picks || {}).slice(0, 18)) {
         const week = Number(w);
         if (!validWeek(week) || !entries || typeof entries !== 'object') continue;
+        if (weekLocked(u.id, week)) { skipped += Object.keys(entries).length; continue; }
         let games; try { games = await espn.getWeek(week); } catch { skipped += Object.keys(entries).length; continue; }
         for (const [key, team] of Object.entries(entries).slice(0, 20)) {
           const g = games.find(x => x.key === key);
@@ -317,6 +334,46 @@ function createApp({ db, espn, clientDir = path.join(__dirname, 'client') }) {
         }
       }
       return { imported, skipped };
+    },
+
+    // Lock in a week's picks for good. Required before exporting the graphic.
+    'POST /api/lock': async (req) => {
+      const u = currentUser(req); if (!u) throw fail(401, 'Log in first.');
+      const { week } = await readJson(req);
+      if (!validWeek(week)) throw fail(400, 'Bad week.');
+      if (!q.countWeekPicks.get(u.id, SEASON, week).n) throw fail(400, 'Make at least one pick before locking in Week ' + week + '.');
+      q.lockWeek.run(u.id, SEASON, week, Date.now());
+      return { ok: true, lockedWeeks: lockedWeeks(u.id) };
+    },
+
+    // Standings for every account: one week, plus the full season.
+    'GET /api/leaderboard': async (req, res, url) => {
+      const week = Number(url.searchParams.get('week'));
+      if (!validWeek(week)) throw fail(400, 'Week must be 1–18.');
+      const users = q.allUsers.all();
+      const picks = {}; // userId -> week -> key -> team
+      for (const r of q.allPicks.all(SEASON)) ((picks[r.user_id] ??= {})[r.week] ??= {})[r.game_key] = r.team;
+      const locks = new Set(q.allLocks.all(SEASON).map(r => r.user_id + ':' + r.week));
+      const weeks = [...new Set([week, ...Object.values(picks).flatMap(p => Object.keys(p).map(Number))])];
+      const schedules = {};
+      await Promise.all(weeks.map(async w => { try { schedules[w] = await espn.getWeek(w); } catch { /* skip weeks ESPN can't serve */ } }));
+      const blank = () => ({ correct: 0, wrong: 0, push: 0, pending: 0 });
+      const add = (a, b) => { for (const k in b) a[k] += b[k]; };
+      const rank = rows => {
+        rows.sort((a, b) => b.correct - a.correct || a.wrong - b.wrong || a.username.localeCompare(b.username));
+        rows.forEach((r, i) => { r.rank = i && rows[i - 1].correct === r.correct && rows[i - 1].wrong === r.wrong ? rows[i - 1].rank : i + 1; });
+        return rows;
+      };
+      const weekly = [], season = [];
+      for (const u of users) {
+        const up = picks[u.id] || {};
+        const wk = schedules[week] && up[week] ? grade(schedules[week], up[week]) : blank();
+        weekly.push({ username: u.username, ...wk, picks: Object.keys(up[week] || {}).length, locked: locks.has(u.id + ':' + week) });
+        const tot = blank();
+        for (const w of Object.keys(up)) if (schedules[w]) add(tot, grade(schedules[w], up[w]));
+        season.push({ username: u.username, ...tot });
+      }
+      return { week, games: schedules[week]?.length || 0, weekly: rank(weekly), season: rank(season) };
     },
 
     'GET /api/record': async (req) => {

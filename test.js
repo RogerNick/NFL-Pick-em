@@ -101,6 +101,25 @@ const fakeFetch = async (url) => {
   assert.equal(r.status, 200, 'login is case-insensitive on username');
   assert.deepEqual((await call('GET', '/api/picks')).data.picks['8']['KC-DEN'], 'DEN', 'picks survive logout/login');
 
+  // Lock in week 8: picks become final
+  assert.equal((await call('POST', '/api/lock', { week: 9 })).status, 400, 'cannot lock a week with no picks');
+  r = await call('POST', '/api/lock', { week: 8 });
+  assert.deepEqual(r.data.lockedWeeks, [8]);
+  assert.equal((await call('PUT', '/api/picks', { week: 8, key: 'PHI-NYG', team: 'NYG' })).status, 423, 'locked week rejects changes');
+  assert.equal((await call('PUT', '/api/picks', { week: 8, key: 'PHI-NYG', team: null })).status, 423, 'locked week rejects removals');
+  assert.deepEqual((await call('GET', '/api/picks')).data.lockedWeeks, [8]);
+
+  // Leaderboard across accounts (visible without logging in)
+  const mine = cookie; cookie = '';
+  await call('POST', '/api/register', { username: 'sam', password: 'password123' });
+  await call('PUT', '/api/picks', { week: 8, key: 'KC-DEN', team: 'KC' });
+  cookie = '';
+  r = await call('GET', '/api/leaderboard?week=8');
+  assert.equal(r.status, 200);
+  assert.deepEqual(r.data.weekly.map(x => [x.username, x.picks, x.locked, x.pending]), [['Jacob', 2, true, 2], ['sam', 1, false, 1]]);
+  assert.equal(r.data.season.length, 2); assert.equal(r.data.games, 5);
+  cookie = mine;
+
   // Duplicate username
   cookie = '';
   assert.equal((await call('POST', '/api/register', { username: 'JACOB', password: 'anotherpass' })).status, 409);
