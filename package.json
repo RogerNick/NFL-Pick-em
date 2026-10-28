@@ -1,0 +1,14 @@
+{
+  "name": "nfl-pickem",
+  "version": "2.0.0",
+  "description": "NFL Pick'em with accounts, live results and scoring",
+  "main": "server.js",
+  "scripts": {
+    "start": "node --no-warnings=ExperimentalWarning server.js",
+    "test": "node test.js"
+  },
+  "private": true,
+  "engines": {
+    "node": "24.x"
+  }
+}

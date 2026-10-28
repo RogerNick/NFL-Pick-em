@@ -1,0 +1,176 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>2026 NFL Pick'em Studio</title><style>
+:root{font-family:Inter,system-ui,Arial,sans-serif;color:#eef5ff;background:#06101f}*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at top,#193b64 0,#071426 45%,#040b14 100%);min-height:100vh}header{border-bottom:1px solid #365270;background:#071526df;padding:24px max(18px,calc((100vw - 1150px)/2))}.eyebrow{font-size:11px;letter-spacing:4px;color:#68d6ff;font-weight:900}.brand{font-size:clamp(27px,5vw,48px);font-weight:1000;letter-spacing:-2px;margin:5px 0}.brand span{color:#58d6ff}.sub{color:#9db2c9;font-size:13px}.wrap{max-width:1150px;margin:auto;padding:24px 18px 65px}.toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:20px}button,select{font:inherit;color:white;background:#152d49;border:1px solid #385778;border-radius:9px;padding:11px 14px;cursor:pointer}button:hover{border-color:#6ed9ff}button.primary{background:#087eac;border-color:#36b7ec;font-weight:800}button.danger{color:#ffc6c6}.week{font-size:20px;font-weight:900;min-width:120px;text-align:center}.statbar{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:22px}.stat{background:#11253c;border:1px solid #2c4560;padding:16px;border-radius:12px}.stat strong{font-size:27px;display:block;font-variant-numeric:tabular-nums}.stat small{color:#a4b7c9}.layout{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:22px;align-items:start}.panel{background:#09182bbf;border:1px solid #2c4866;border-radius:14px;overflow:hidden}.panel+.panel{margin-top:22px}.panel h2{font-size:16px;letter-spacing:1px;margin:0;padding:18px;border-bottom:1px solid #29435f}.game{display:grid;grid-template-columns:1fr 34px 1fr;align-items:center;gap:6px;padding:9px 12px;border-bottom:1px solid #263d54}.team{display:flex;align-items:center;gap:9px;min-width:0;background:#13263c;border:1px solid #36516a;border-radius:9px;padding:12px 9px;text-align:left;font-weight:800;font-size:13px;min-height:65px}.team img{width:35px;height:35px;object-fit:contain}.team .nm{flex:1;min-width:0}.team .score{font-size:20px;font-weight:900;font-variant-numeric:tabular-nums;color:#c9d8e6}.team.won .score{color:#fff}.team.lost{opacity:.6}.team.selected{border:2px solid #66f9a2;background:#134337;box-shadow:0 0 13px #2ee98933}.team.correct{border:2px solid #66f9a2;background:#134337;box-shadow:0 0 13px #2ee98933;opacity:1}.team.selected.pending{border-color:#ffd166;background:#3a3216;box-shadow:0 0 13px #ffd16633}.team.selected.pending:after{content:'⏳';color:#ffd166}.team.wrong{border:2px solid #ff6b6b;background:#43181c;opacity:1}.team.selected:after,.team.correct:after{content:'✓';color:#8cffb6}.team.wrong:after{content:'✗';color:#ff9b9b}.team:disabled{cursor:default}.team:disabled:hover{border-color:#36516a}.team.selected:disabled:hover,.team.correct:hover{border-color:#66f9a2}.team.wrong:hover{border-color:#ff6b6b}.vs{text-align:center;font-size:11px;color:#9fb2c7;font-weight:900}.game-meta{grid-column:1/-1;color:#91a7bd;font-size:11px;text-align:center;margin-top:2px}.game-meta.live{color:#ffd166;font-weight:800}.game-meta.final{color:#cfe0ef;font-weight:800}.side{padding:18px}.side p{color:#a9bdd0;font-size:13px;line-height:1.65}.side button{width:100%;margin:6px 0}.hint{background:#112a41;border-left:3px solid #50bdf5;padding:12px;border-radius:5px}.hint.err{border-left-color:#ff6b6b;color:#ffd4d4}.loading{padding:25px;color:#a6c4dd;text-align:center}.footer{margin-top:30px;text-align:center;color:#7c91a7;font-size:12px}#poster{display:none}a{color:#74d8ff}
+.auth input{width:100%;font:inherit;color:#fff;background:#0d2036;border:1px solid #385778;border-radius:9px;padding:10px 12px;margin:4px 0}.auth input:focus{outline:none;border-color:#6ed9ff}.auth .row{display:flex;gap:8px}.auth .row button{flex:1;padding:10px 8px}.who{display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:14px}.who button{width:auto;margin:0;padding:8px 12px}
+.scorecard{list-style:none;padding:0;margin:0}.scorecard li{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid #22384f;font-size:13px;color:#cbdcec;font-variant-numeric:tabular-nums}.scorecard li:last-child{border-bottom:0}.scorecard .tot{font-weight:900;color:#fff}.scorecard .pend{color:#8aa1b8;font-size:12px}
+@media(max-width:760px){.layout{grid-template-columns:1fr}.statbar{gap:6px}.stat{padding:12px}.stat strong{font-size:21px}.team{font-size:11px;padding:9px 5px;gap:4px}.team img{width:27px;height:27px}.team .score{font-size:16px}.game{padding:8px 6px;grid-template-columns:1fr 20px 1fr}}
+</style></head><body><header><div class="eyebrow">THE PREDICTION STUDIO</div><div class="brand">NFL <span>2026</span> PICK'EM</div><div class="sub">18 weeks. Every matchup. Your winners, graded live. One broadcast-ready graphic.</div></header><main class="wrap"><div class="toolbar"><button id="prev">‹ Previous</button><div class="week" id="weekLabel">WEEK —</div><button id="next">Next ›</button><select id="weekSelect" aria-label="Select week"></select><button id="refresh">↻ Refresh scores</button></div><div class="statbar"><div class="stat"><strong id="picked">0 / 0</strong><small>Picks this week</small></div><div class="stat"><strong id="weekRec">0–0</strong><small id="weekRecLabel">Week record</small></div><div class="stat"><strong id="seasonRec">0–0</strong><small id="seasonRecLabel">Season record</small></div></div><div class="layout"><section class="panel"><h2 id="gamesTitle">MATCHUPS</h2><div id="games" class="loading">Loading schedule…</div></section><div><aside class="panel"><h2>MY ACCOUNT</h2><div class="side" id="auth"></div></aside><aside class="panel"><h2>SEASON SCORECARD</h2><div class="side" id="scorecard"><p>Log in to track your record week by week.</p></div></aside><aside class="panel"><h2>GRAPHIC STUDIO</h2><div class="side"><p>Tap a team to pick the winner. Picks lock when each game kicks off, and results fill in automatically as games go final.</p><button class="primary" id="export">↓ Export PNG graphic</button><button id="exportAll">↓ Export compact PNG</button><button class="danger" id="clear">Clear this week's open picks</button><p class="hint" id="status">Connecting…</p></div></aside></div></div><div class="footer">Independent fan-made prediction tool · Schedules and scores from ESPN · Not affiliated with the NFL or ESPN</div></main><canvas id="poster"></canvas><script>
+const TEAMS={ARI:['Arizona Cardinals','#97233f'],ATL:['Atlanta Falcons','#a71930'],BAL:['Baltimore Ravens','#241773'],BUF:['Buffalo Bills','#00338d'],CAR:['Carolina Panthers','#0085ca'],CHI:['Chicago Bears','#c83803'],CIN:['Cincinnati Bengals','#fb4f14'],CLE:['Cleveland Browns','#ff3c00'],DAL:['Dallas Cowboys','#003594'],DEN:['Denver Broncos','#fb4f14'],DET:['Detroit Lions','#0076b6'],GB:['Green Bay Packers','#203731'],HOU:['Houston Texans','#03202f'],IND:['Indianapolis Colts','#002c5f'],JAX:['Jacksonville Jaguars','#006778'],KC:['Kansas City Chiefs','#e31837'],LV:['Las Vegas Raiders','#555555'],LAC:['Los Angeles Chargers','#0080c6'],LAR:['Los Angeles Rams','#003594'],MIA:['Miami Dolphins','#008e97'],MIN:['Minnesota Vikings','#4f2683'],NE:['New England Patriots','#002244'],NO:['New Orleans Saints','#9f8958'],NYG:['New York Giants','#0b2265'],NYJ:['New York Jets','#125740'],PHI:['Philadelphia Eagles','#004c54'],PIT:['Pittsburgh Steelers','#ffb612'],SF:['San Francisco 49ers','#aa0000'],SEA:['Seattle Seahawks','#002244'],TB:['Tampa Bay Buccaneers','#d50a0a'],TEN:['Tennessee Titans','#4b92db'],WAS:['Washington Commanders','#5a1414']};
+const LOCAL_KEY='nfl2026picks';
+let week=1,cache={},picks={},record=null,user=null,signupCodeRequired=false;
+const $=id=>document.getElementById(id);
+for(let i=1;i<=18;i++){let o=document.createElement('option');o.value=i;o.textContent='Week '+i;$('weekSelect').append(o)}
+function key(g){return g.away+'-'+g.home}
+function formatDate(d){return new Intl.DateTimeFormat('en-US',{weekday:'short',month:'short',day:'numeric',hour:'numeric',minute:'2-digit',timeZone:'America/New_York',timeZoneName:'short'}).format(new Date(d))}
+function logo(code){return 'https://a.espncdn.com/i/teamlogos/nfl/500/'+code.toLowerCase()+'.png'}
+function status(msg,err=false){$('status').textContent=msg;$('status').classList.toggle('err',err)}
+const isLocked=g=>g.state!=='pre'||Date.now()>=new Date(g.date).getTime();
+function rec(r){if(!r)return '0–0';return r.correct+'–'+r.wrong+(r.push?'–'+r.push:'')}
+function pct(r){let n=r?r.correct+r.wrong:0;return n?(r.correct/n*100).toFixed(1)+'%':''}
+
+async function api(path,opts={}){
+  const r=await fetch(path,{method:opts.method||'GET',credentials:'same-origin',headers:opts.body?{'Content-Type':'application/json'}:{},body:opts.body?JSON.stringify(opts.body):undefined});
+  let data={};try{data=await r.json()}catch{}
+  if(!r.ok)throw Object.assign(Error(data.error||('Request failed ('+r.status+')')),{status:r.status});
+  return data;
+}
+
+// ---------- Account ----------
+function renderAuth(){
+  const el=$('auth');
+  if(user){
+    el.innerHTML='<div class="who"><span>Signed in as <b></b></span><button id="logout">Log out</button></div>';
+    el.querySelector('b').textContent=user.username;$('logout').onclick=logout;return;
+  }
+  el.innerHTML='<form id="authForm" class="auth"><p>Log in to save your picks to your account and keep score all season.</p><input id="u" autocomplete="username" placeholder="Username" required maxlength="20"><input id="p" type="password" autocomplete="current-password" placeholder="Password (8+ characters)" required>'+(signupCodeRequired?'<input id="code" placeholder="Invite code (new accounts only)">':'')+'<div class="row"><button class="primary" type="submit" data-mode="login">Log in</button><button type="submit" data-mode="register">Create account</button></div></form>';
+  $('authForm').onsubmit=async e=>{
+    e.preventDefault();
+    const mode=e.submitter?.dataset.mode||'login',btns=e.target.querySelectorAll('button');
+    btns.forEach(b=>b.disabled=true);
+    try{
+      const body={username:$('u').value.trim(),password:$('p').value};
+      if(mode==='register'&&$('code'))body.code=$('code').value.trim();
+      const res=await api('/api/'+mode,{method:'POST',body});
+      user=res.user;
+      status(mode==='register'?'Account created. Your picks now save to your account.':'Welcome back, '+user.username+'.');
+      await importLocal();await refreshAccount();
+    }catch(err){status(err.message,true)}
+    finally{btns.forEach(b=>b.disabled=false)}
+  };
+}
+async function logout(){try{await api('/api/logout',{method:'POST'})}catch{}user=null;picks={};record=null;renderAuth();renderScorecard();render();status('Logged out.')}
+async function refreshAccount(){
+  if(user){try{picks=(await api('/api/picks')).picks||{}}catch(err){if(err.status===401){user=null;picks={}}}}
+  else picks={};
+  renderAuth();render();await refreshRecord();
+}
+async function refreshRecord(){
+  if(!user){record=null;renderScorecard();renderStats();return}
+  try{record=await api('/api/record')}catch{}
+  renderScorecard();renderStats();
+}
+// Picks made in this browser before accounts existed get moved into the account (games not yet started only).
+async function importLocal(){
+  let local;try{local=JSON.parse(localStorage.getItem(LOCAL_KEY)||'{}')}catch{local={}}
+  if(!Object.values(local).some(w=>w&&Object.keys(w).length))return;
+  try{const r=await api('/api/picks/import',{method:'POST',body:{picks:local}});
+    try{localStorage.removeItem(LOCAL_KEY)}catch{}
+    if(r.imported)status('Moved '+r.imported+' pick'+(r.imported===1?'':'s')+' saved in this browser into your account.');
+  }catch{}
+}
+
+// ---------- Schedule ----------
+async function load(w,force=false,quiet=false){
+  week=w;$('weekSelect').value=w;$('weekLabel').textContent='WEEK '+w;$('gamesTitle').textContent='MATCHUPS · WEEK '+w;
+  if(cache[w]&&!force){render();return}
+  if(!quiet)$('games').innerHTML='<div class="loading">Loading Week '+w+'…</div>';
+  try{cache[w]=(await api('/api/schedule?week='+w+(force?'&refresh=1':''))).games;if(!quiet)status(user?'Schedule and scores loaded. Picks save to your account.':'Schedule loaded. Log in to make and save picks.')}
+  catch(err){if(!cache[w])cache[w]=[];if(!quiet)status(err.message,true)}
+  render();if(force)refreshRecord();
+}
+function metaFor(g){
+  const s=g.awayScore!=null?' · '+g.away+' '+g.awayScore+' – '+g.home+' '+g.homeScore:'';
+  if(g.state==='off')return['POSTPONED / CANCELED','final'];
+  if(g.completed)return[(g.statusText||'Final').toUpperCase()+s,'final'];
+  if(g.state==='in')return['LIVE · '+g.statusText+s,'live'];
+  return[formatDate(g.date)+(isLocked(g)?' · 🔒 Locked':''),''];
+}
+function render(){
+  let games=cache[week]||[],container=$('games');container.innerHTML='';
+  if(!games.length)container.innerHTML='<div class="loading">Schedule unavailable for this week. Try Refresh scores.</div>';
+  for(let g of games){
+    let item=document.createElement('div');item.className='game';
+    const pick=picks[week]?.[key(g)],locked=isLocked(g),decided=g.completed&&g.winner&&g.winner!=='TIE';
+    for(let [index,code] of [g.away,g.home].entries()){
+      if(index){let vs=document.createElement('div');vs.className='vs';vs.textContent='AT';item.append(vs)}
+      let b=document.createElement('button');b.className='team';
+      if(pick===code){b.classList.add(decided?(g.winner===code?'correct':'wrong'):'selected');if(!decided&&locked)b.classList.add('pending')}
+      if(decided)b.classList.add(g.winner===code?'won':'lost');
+      b.style.borderLeft='4px solid '+TEAMS[code][1];
+      let img=document.createElement('img');img.src=logo(code);img.alt='';img.onerror=()=>img.style.display='none';
+      let nm=document.createElement('span');nm.className='nm';nm.textContent=TEAMS[code][0];
+      b.append(img,nm);
+      let sc=index?g.homeScore:g.awayScore;
+      if(sc!=null){let s=document.createElement('span');s.className='score';s.textContent=sc;b.append(s)}
+      if(locked){b.disabled=true;b.title='Picks lock at kickoff'}
+      b.onclick=()=>togglePick(g,code);
+      item.append(b);
+    }
+    let meta=document.createElement('div'),[text,cls]=metaFor(g);meta.className='game-meta '+cls;meta.textContent=text;item.append(meta);
+    container.append(item);
+  }
+  renderStats();
+}
+function renderStats(){
+  let games=cache[week]||[];
+  $('picked').textContent=games.filter(g=>picks[week]?.[key(g)]).length+' / '+games.length;
+  let w=record?.weeks?.[week],s=record?.season;
+  $('weekRec').textContent=rec(w);
+  $('weekRecLabel').textContent='Week '+week+' record'+(w?.pending?' · '+w.pending+' pending':'');
+  $('seasonRec').textContent=rec(s);
+  $('seasonRecLabel').textContent='Season record'+(pct(s)?' · '+pct(s):'');
+}
+function renderScorecard(){
+  const el=$('scorecard');
+  if(!user){el.innerHTML='<p>Log in to track your record week by week.</p>';return}
+  const weeks=Object.entries(record?.weeks||{}).sort((a,b)=>a[0]-b[0]);
+  if(!weeks.length){el.innerHTML='<p>No picks yet. Your record builds here as games go final.</p>';return}
+  const ul=document.createElement('ul');ul.className='scorecard';
+  for(const [w,r] of weeks){const li=document.createElement('li');li.innerHTML='<span>Week '+w+'</span><span>'+rec(r)+(r.pending?' <span class="pend">('+r.pending+' pending)</span>':'')+'</span>';ul.append(li)}
+  const tot=document.createElement('li');tot.className='tot';tot.innerHTML='<span>Season</span><span>'+rec(record.season)+(pct(record.season)?' · '+pct(record.season):'')+'</span>';ul.append(tot);
+  el.innerHTML='';el.append(ul);
+}
+async function togglePick(g,code){
+  if(!user){status('Log in or create an account to make picks.',true);$('u')?.focus();return}
+  if(isLocked(g)){status('That game has kicked off, so its pick is locked.',true);render();return}
+  const k=key(g),w=week,prev=picks[w]?.[k],next=prev===code?null:code;
+  picks[w]??={};if(next)picks[w][k]=next;else delete picks[w][k];render();
+  try{await api('/api/picks',{method:'PUT',body:{week:w,key:k,team:next}});status('Pick saved.');refreshRecord()}
+  catch(err){if(prev)picks[w][k]=prev;else delete picks[w][k];if(week===w)render();status(err.message,true)}
+}
+async function clearWeek(){
+  if(!user){status('Log in to manage picks.',true);return}
+  const open=(cache[week]||[]).filter(g=>!isLocked(g)&&picks[week]?.[key(g)]);
+  if(!open.length){status('No open picks to clear this week. Picks for games that have started stay locked.');return}
+  if(!confirm('Clear your '+open.length+' open Week '+week+' pick'+(open.length===1?'':'s')+'? Picks for games already started stay.'))return;
+  for(const g of open){try{await api('/api/picks',{method:'PUT',body:{week,key:key(g),team:null}});delete picks[week][key(g)]}catch(err){status(err.message,true)}}
+  render();refreshRecord();
+}
+
+// ---------- Poster export ----------
+function txt(ctx,s,x,y,size=24,color='#fff',align='left',weight=800){ctx.fillStyle=color;ctx.textAlign=align;ctx.font=weight+' '+size+'px Arial, sans-serif';ctx.fillText(s,x,y)}
+const LOGO_CACHE={};
+async function getLogo(code){if(LOGO_CACHE[code]!==undefined)return LOGO_CACHE[code];try{let img=new Image();img.crossOrigin='anonymous';img.src=logo(code);await Promise.race([img.decode(),new Promise((_,reject)=>setTimeout(()=>reject(Error('logo timeout')),3500))]);return LOGO_CACHE[code]=img}catch{return LOGO_CACHE[code]=null}}
+function fillRound(ctx,x,y,w,h,r,fill){ctx.beginPath();ctx.roundRect(x,y,w,h,r);ctx.fillStyle=fill;ctx.fill()}
+function outlined(ctx,x,y,w,h,color='#5aff8a'){ctx.save();ctx.shadowColor=color;ctx.shadowBlur=17;ctx.strokeStyle=color;ctx.lineWidth=4;ctx.strokeRect(x+2,y+2,w-4,h-4);ctx.restore()}
+function fitText(ctx,str,maxWidth,initial=30){let n=initial;while(n>16){ctx.font='900 '+n+'px Arial Narrow,Arial,sans-serif';if(ctx.measureText(str).width<=maxWidth)break;n--}return n}
+function dateHeader(d){return new Intl.DateTimeFormat('en-US',{weekday:'long',month:'short',day:'numeric',timeZone:'America/New_York'}).format(new Date(d)).toUpperCase()}
+function timeHeader(d){return new Intl.DateTimeFormat('en-US',{hour:'numeric',minute:'2-digit',timeZone:'America/New_York'}).format(new Date(d))+' ET'}
+function scheduleGroups(games){let out=[];for(const g of games){let id=dateHeader(g.date)+'|'+timeHeader(g.date);let last=out[out.length-1];if(!last||last.id!==id)out.push({id,date:dateHeader(g.date),time:timeHeader(g.date),games:[g]});else last.games.push(g)}return out}
+function drawStadium(ctx,W,H){let sky=ctx.createLinearGradient(0,0,0,H);sky.addColorStop(0,'#06152f');sky.addColorStop(.4,'#0a2440');sky.addColorStop(.8,'#0b1b2e');sky.addColorStop(1,'#102c23');ctx.fillStyle=sky;ctx.fillRect(0,0,W,H);ctx.save();let seed=12345;const rnd=()=>((seed=(seed*1664525+1013904223)>>>0)/4294967296);for(let side of [0,1]){ctx.save();ctx.translate(side?W:0,0);ctx.scale(side?-1:1,1);for(let i=0;i<1700;i++){let x=rnd()*W*.24,y=190+rnd()*(H-360);ctx.fillStyle=['#284f72','#64829a','#d2dae1','#172c46','#698ba4'][Math.floor(rnd()*5)];ctx.globalAlpha=.16+rnd()*.38;ctx.fillRect(x,y,2+rnd()*3,1+rnd()*3)}ctx.restore()}ctx.restore();for(let side of [0,1]){let x=side?W-75:75,y=65;let halo=ctx.createRadialGradient(x,y,0,x,y,175);halo.addColorStop(0,'rgba(255,255,255,.65)');halo.addColorStop(.12,'rgba(130,192,255,.27)');halo.addColorStop(1,'rgba(130,192,255,0)');ctx.fillStyle=halo;ctx.fillRect(x-180,y-180,360,360);for(let r=0;r<4;r++)for(let c=0;c<6;c++){ctx.fillStyle='#eaf6ff';ctx.shadowColor='#a2d6ff';ctx.shadowBlur=13;ctx.fillRect(x+(c-2.5)*15,y+(r-1.5)*15,7,7)}ctx.shadowBlur=0}ctx.fillStyle='#153a30';ctx.fillRect(0,H-115,W,115);for(let i=0;i<12;i++){ctx.strokeStyle='rgba(255,255,255,.14)';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(i*110-120,H);ctx.lineTo(W/2+(i-6)*28,H-115);ctx.stroke()}ctx.fillStyle='rgba(255,255,255,.17)';ctx.fillRect(0,H-115,W,3)}
+// mark: null | 'pick' | 'correct' | 'wrong'
+function drawTeam(ctx,code,x,y,w,h,mark,img,compact){let color=TEAMS[code][1];let grad=ctx.createLinearGradient(x,y,x+w,y);grad.addColorStop(0,color);grad.addColorStop(1,'#071a30');fillRound(ctx,x,y,w,h,4,grad);ctx.fillStyle='rgba(0,0,0,.13)';ctx.fillRect(x,y,w,h);let logoSize=compact?59:75;if(img){ctx.drawImage(img,x+14,y+(h-logoSize)/2,logoSize,logoSize)}else{fillRound(ctx,x+16,y+17,60,h-34,7,'rgba(255,255,255,.14)');txt(ctx,code,x+46,y+h/2+9,23,'#fff','center')}let name=TEAMS[code][0].toUpperCase(),space=w-(mark?220:126);let fs=fitText(ctx,name,space,compact?24:30);txt(ctx,name,x+100,y+h/2+fs*.35,fs);if(mark){const bad=mark==='wrong',c=bad?'#ff5a5a':'#5aff8a';outlined(ctx,x,y,w,h,c);fillRound(ctx,x+w-111,y+h/2-17,102,34,5,bad?'#6a1418':'#075d2d');txt(ctx,mark==='pick'?'✓ WINNER':bad?'✗ MISSED':'✓ CORRECT',x+w-60,y+h/2+7,17,bad?'#ffe3e3':'#e6ffea','center')}}
+async function exportPNG(compact=false){let games=cache[week]||[];if(!games.length){alert('Load the week schedule before exporting.');return}const btn=$(compact?'exportAll':'export');btn.disabled=true;let old=btn.textContent;btn.textContent='Rendering poster…';try{let groups=scheduleGroups(games),W=1080,rowH=compact?77:96,groupH=compact?36:45,gap=12,top=218,bottom=145,H=top+groups.reduce((a,g)=>a+groupH+g.games.length*rowH+gap,0)+bottom;let c=$('poster');c.width=W;c.height=H;let ctx=c.getContext('2d');drawStadium(ctx,W,H);txt(ctx,'NFL 2026  •  WEEK '+week,W/2,88,70,'#fff','center');let start=new Date(games[0].date),finish=new Date(games[games.length-1].date);let df=new Intl.DateTimeFormat('en-US',{month:'short',day:'numeric',timeZone:'America/New_York'});txt(ctx,df.format(start).toUpperCase()+'  —  '+df.format(finish).toUpperCase(),W/2,132,26,'#d9e8ff','center');txt(ctx,(user?user.username.toUpperCase()+"'S ":'MY ')+'WINNER PREDICTIONS',W/2,176,24,'#a8c9e9','center');let allCodes=[...new Set(games.flatMap(g=>[g.away,g.home]))];let images=Object.fromEntries(await Promise.all(allCodes.map(async code=>[code,await getLogo(code)])));let y=top;for(let group of groups){fillRound(ctx,37,y,W-74,groupH,4,'rgba(4,25,51,.96)');ctx.strokeStyle='#7896b2';ctx.lineWidth=1;ctx.strokeRect(37,y,W-74,groupH);txt(ctx,group.date,51,y+groupH*.72,compact?19:23);txt(ctx,group.time,W-52,y+groupH*.72,compact?19:23,'#fff','right');y+=groupH;for(let g of group.games){let h=rowH-5,p=picks[week]?.[key(g)],decided=g.completed&&g.winner&&g.winner!=='TIE';const mark=code=>p!==code?null:decided?(g.winner===code?'correct':'wrong'):'pick';drawTeam(ctx,g.away,37,y,475,h,mark(g.away),images[g.away],compact);drawTeam(ctx,g.home,568,y,475,h,mark(g.home),images[g.home],compact);fillRound(ctx,512,y,56,h,0,'#071525');txt(ctx,'AT',540,y+h/2+8,22,'#fff','center');y+=rowH}y+=gap}txt(ctx,'2026 REGULAR SEASON  •  FAN-MADE PREDICTIONS',W/2,H-88,20,'#dceafa','center');let wr=record?.weeks?.[week],graded=wr?wr.correct+wr.wrong+wr.push:0;txt(ctx,graded?'WEEK '+week+' RECORD: '+rec(wr)+(wr.pending?'  •  '+wr.pending+' PENDING':''):games.filter(g=>picks[week]?.[key(g)]).length+' OF '+games.length+' WINNERS SELECTED',W/2,H-54,19,'#b7ffce','center');let a=document.createElement('a');a.download='nfl-2026-week-'+week+'-broadcast'+(compact?'-compact':'')+'.png';a.href=c.toDataURL('image/png');a.click()}catch(err){console.error(err);alert('Poster export failed. Try refreshing the page so team logos reload.')}finally{btn.disabled=false;btn.textContent=old}}
+
+// ---------- Wire up ----------
+$('prev').onclick=()=>load(Math.max(1,week-1));$('next').onclick=()=>load(Math.min(18,week+1));$('weekSelect').onchange=e=>load(+e.target.value);$('refresh').onclick=()=>load(week,true);$('clear').onclick=clearWeek;$('export').onclick=()=>exportPNG(false);$('exportAll').onclick=()=>exportPNG(true);
+// While games are live or kicking off, refresh scores every minute.
+setInterval(()=>{if(document.hidden)return;const g=cache[week]||[];if(g.some(x=>x.state==='in'||(!x.completed&&x.state!=='off'&&isLocked(x))))load(week,true,true);else render()},60000);
+(async()=>{
+  let start=1;
+  try{const me=await api('/api/me');user=me.user;signupCodeRequired=me.signupCodeRequired;start=me.currentWeek||1}
+  catch{status('Could not reach the server. Refresh the page to try again.',true)}
+  renderAuth();
+  if(user){await importLocal();await refreshAccount()}
+  load(start);
+})();
+</script></body></html>
