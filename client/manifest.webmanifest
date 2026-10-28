@@ -1,0 +1,18 @@
+{
+  "id": "/",
+  "name": "NFL 2026 Pick'em",
+  "short_name": "Pick'em",
+  "description": "Pick NFL winners every week, lock them in, and climb the league leaderboard.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#071426",
+  "theme_color": "#071526",
+  "categories": ["sports", "entertainment"],
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

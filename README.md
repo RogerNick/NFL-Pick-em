@@ -8,11 +8,23 @@ Pick winners every week, log in to save your picks, and watch your record update
 - **Fair play:** picks lock at each game's kickoff.
 - **No dependencies:** runs on Node 24 using only built-in modules. Data lives in one SQLite file.
 
+## Install it like an app
+
+The site is installable (a "progressive web app"), so it opens full-screen from a home-screen icon:
+
+- **iPhone / iPad (Safari, or Chrome on iOS):** Share button → **Add to Home Screen** → Add
+- **Android (Chrome, Samsung Internet, Edge):** tap **Install app** in the My Account panel, or browser menu → **Install app**
+- **Android (Firefox):** ⋮ menu → **Install**
+- **Computer (Chrome / Edge):** install icon in the address bar
+
+The installed app keeps its own login, so log in once inside it. The site shows these instructions automatically on each device.
+
 ## Files
 
 ```
 server.js          the web server and API
 client/index.html  the website
+client/manifest.webmanifest, client/sw.js, client/icons/  app install files
 package.json       start command + Node version
 test.js            self-test (npm test)
 ```

@@ -392,7 +392,19 @@ function createApp({ db, espn, clientDir = path.join(__dirname, 'client') }) {
     'GET /healthz': async () => 'ok',
   };
 
-  let indexHtml = null;
+  // Static files: only these, nothing else from disk is ever served.
+  const STATIC = {
+    '/': ['index.html', 'text/html; charset=utf-8', 'no-cache'],
+    '/index.html': ['index.html', 'text/html; charset=utf-8', 'no-cache'],
+    '/manifest.webmanifest': ['manifest.webmanifest', 'application/manifest+json', 'no-cache'],
+    '/sw.js': ['sw.js', 'text/javascript; charset=utf-8', 'no-cache'],
+    '/favicon.ico': ['icons/favicon-32.png', 'image/png', 'public, max-age=86400'],
+    '/apple-touch-icon.png': ['icons/apple-touch-icon.png', 'image/png', 'public, max-age=86400'],
+  };
+  for (const f of ['icon-192.png', 'icon-512.png', 'maskable-512.png', 'apple-touch-icon.png', 'favicon-32.png'])
+    STATIC['/icons/' + f] = ['icons/' + f, 'image/png', 'public, max-age=86400'];
+  const fileCache = new Map();
+
   return async function handler(req, res) {
     const url = new URL(req.url, 'http://localhost');
     try {
@@ -401,10 +413,12 @@ function createApp({ db, espn, clientDir = path.join(__dirname, 'client') }) {
         const out = await route(req, res, url);
         return Array.isArray(out) ? send(res, 200, out[0], out[1]) : send(res, 200, out);
       }
-      if (req.method === 'GET' && (url.pathname === '/' || url.pathname === '/index.html')) {
-        indexHtml ??= fs.readFileSync(path.join(clientDir, 'index.html'));
-        res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-cache', 'X-Content-Type-Options': 'nosniff' });
-        return res.end(indexHtml);
+      const file = (req.method === 'GET' || req.method === 'HEAD') && STATIC[url.pathname];
+      if (file) {
+        const [rel, type, cache] = file;
+        if (!fileCache.has(rel)) fileCache.set(rel, fs.readFileSync(path.join(clientDir, rel)));
+        res.writeHead(200, { 'Content-Type': type, 'Cache-Control': cache, 'X-Content-Type-Options': 'nosniff' });
+        return res.end(req.method === 'HEAD' ? undefined : fileCache.get(rel));
       }
       send(res, 404, { error: 'Not found' });
     } catch (err) {
